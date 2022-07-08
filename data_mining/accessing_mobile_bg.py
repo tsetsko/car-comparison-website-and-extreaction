@@ -1,10 +1,13 @@
 from bs4 import BeautifulSoup
 import urllib3
 import time
+from selenium import webdriver
 
+PATH = '/Applications/chromedriver'
+driver = webdriver.Chrome(PATH)
 http = urllib3.PoolManager()
 
-URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=otr5yd&f1"
+URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=ow9ic6&f1"
 
 
 def generate_text_from_html(url_for_conversion):
@@ -79,3 +82,7 @@ def get_results_from_detailed_pages(list_to_append_to):
     for link in all_car_links:
         list_to_append_to.append(get_exact_data_for_each_car(link))
         time.sleep(3)
+
+final_list = []
+
+get_results_from_detailed_pages(final_list)
