@@ -1,13 +1,18 @@
 from selenium import webdriver
 from bs4 import BeautifulSoup
 import time
-import pandas
+from datetime import datetime
+import pandas as pd
 
-URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=ox8l6a&f1"
+URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=oxgym1&f1"
+EUR_TO_LEV = 1.95583
+TODAYS_DATE = datetime.today().strftime('%Y-%m-%d')
+month_to_number = {"януари": 1, "февруари": 2, "март": 3, "април": 4, "май": 5, "юни": 6, "юли": 7, "август": 8, "септември": 9, "октовмри": 10, "ноември": 11, "декември": 12}
 
 
 def get_page_source_with_selenium(url_link):
-    PATH = '/Applications/chromedriver'
+    # PATH = '/Applications/chromedriver' for mac
+    PATH = "C:\Windows\chromedriver.exe"
     driver = webdriver.Chrome(PATH)
     driver.get(url_link)
     page_source = driver.page_source
@@ -39,31 +44,42 @@ def get_all_links_of_cars(html_parsed, list_to_append):
             list_to_append.append('https://' + car['href'][2::])
 
 
-def get_exact_data_for_each_car(html_link, added_dictionary):
+def get_exact_data_for_each_car(html_link):
     # This gets the general stats of for each car
-    list_store_len = len(added_dictionary)
     car_dict = {}
-    general_data = html_link.find('ul', {'class': 'dilarData'}).findChildren("li", recursive=False)
-    general_data_only_text = [info.text for count, info in enumerate(general_data) if count % 2 and count != 0]
-    if len(general_data_only_text) == 8:
-        car_dict[list_store_len] = {"General Data": {"Date of production": general_data_only_text[0], "Type of engine": general_data_only_text[1], "Horsepower": general_data_only_text[2], "Eurostandard": general_data_only_text[3], "Transmission": general_data_only_text[4], "Car type": general_data_only_text[5], "Kilometers traveled": general_data_only_text[6], "Colour": general_data_only_text[7]}}
-    # This gets the price of the car
-    detailed_price_general = html_link.find('span', {'id': 'details_price'}).text
-    detailed_price = 0
-    if "лв." in detailed_price_general:
-        detailed_price = int(detailed_price_general.replace('лв.', '').replace(" ", ""))
-    else:
-        detailed_price = int(detailed_price_general.replace('EUR', '').replace(" ", ""))
-    price_dict = {"Price": detailed_price}
-    car_dict.update(price_dict)
-    # Get all additional features
-    additional_features = html_link.find_all('label', {'class': 'extra_cat'})
-    specific_element = []
-    for element in additional_features:
-        for element1 in element.find_next_siblings('div'):
-            specific_element.append(element1.text.replace('•', '').strip())
-    additinal_elements_dict = {"Additional Data": specific_element}
-    car_dict.update(additinal_elements_dict)
+    try:
+        general_data = html_link.find('ul', {'class': 'dilarData'}).findChildren("li", recursive=False)
+        general_data_only_text = [info.text for count, info in enumerate(general_data) if count % 2 and count != 0]
+        if len(general_data_only_text) == 8:
+            car_dict["Date_of_extraction"] = TODAYS_DATE
+            car_dict["Month_of_production"] = month_to_number.get(general_data_only_text[0].split(" ")[0])
+            car_dict["Year_of_production"] = general_data_only_text[0].split(" ")[1].replace("г.", "")
+            car_dict["Type_of_engine"] = general_data_only_text[1]
+            car_dict["Horsepower"] = general_data_only_text[2]
+            car_dict["Eurostandard"] = general_data_only_text[3]
+            car_dict["Transmission"] = general_data_only_text[4]
+            car_dict["Car_type"] = general_data_only_text[5]
+            car_dict["Kilometers_traveled"] = general_data_only_text[6].split(" ")[0]
+            car_dict["Colour"] = general_data_only_text[7]
+            # This gets the price of the car
+            detailed_price_general = html_link.find('span', {'id': 'details_price'}).text
+            detailed_price = 0
+            if "лв." in detailed_price_general:
+                detailed_price = int(detailed_price_general.replace('лв.', '').replace(" ", ""))
+            else:
+                detailed_price = round(int(detailed_price_general.replace('EUR', '').replace(" ", "")) * EUR_TO_LEV, 0)
+            # price_dict = {"Price": detailed_price}
+            car_dict["Price"] = detailed_price
+            # Get all additional features
+            additional_features = html_link.find_all('label', {'class': 'extra_cat'})
+            specific_element = []
+            for element in additional_features:
+                for element1 in element.find_next_siblings('div'):
+                    specific_element.append(element1.text.replace('•', '').strip())
+            # additinal_elements_dict = {"Additional Data": specific_element}
+            car_dict["Additional_Data"] = specific_element
+    except:
+        pass
 
     return car_dict
 
@@ -76,9 +92,14 @@ for page in pages_with_car_offers:
 all_data_list = []
 for detailed_page in all_cars:
     page_source_detail = get_page_source_with_selenium(detailed_page)
-    detailed_dict = get_exact_data_for_each_car(page_source_detail, all_data_list)
+    detailed_dict = get_exact_data_for_each_car(page_source_detail)
     all_data_list.append(detailed_dict)
-    time.sleep(2)
+    time.sleep(5)
 
-print(all_cars)
-print(all_data_list)
+
+df = pd.DataFrame.from_dict(all_data_list)
+df2 = df.dropna().reset_index(drop=True)
+
+print(df2)
+
+df2.to_excel("test.xlsx")
