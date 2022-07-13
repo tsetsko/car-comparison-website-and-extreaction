@@ -4,14 +4,19 @@ import time
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.common.by import By
 import pandas as pd
+from sys import platform
 
 URL = "https://www.mobile.bg/pcgi/mobile.cgi"
 
-PATH = '/Applications/chromedriver'
+path = ""
+if platform == "darwin":
+    path = '/Applications/chromedriver'
+elif platform == "win32":
+    path = "C:\Windows\chromedriver.exe"
 # PATH = "/Applications/geckodriver"
 BRANDS_TO_LOOK_FOR = ["Audi", "BMW", "Mercedes-Benz", "Skoda", "VW"]
 # PATH = "C:\Windows\chromedriver.exe"
-driver = webdriver.Chrome(executable_path=PATH)
+driver = webdriver.Chrome(executable_path=path)
 driver.get(URL)
 page_source = driver.page_source
 soup = BeautifulSoup(page_source, "html.parser")
@@ -22,7 +27,6 @@ print(all_car_brands)
 models = []
 for brand in all_car_brands:
     if brand in BRANDS_TO_LOOK_FOR:
-        # models.append({brand: []})
         select = Select(driver.find_element(By.NAME, "marka"))
         select.select_by_visible_text(brand)
         new_page_source = driver.page_source
@@ -30,7 +34,6 @@ for brand in all_car_brands:
         model_to_loop = [model.text for model in new_soup.find("select", {"name": "model"}).findChildren("option", recursive=False) if model.text != "всички\n"]
         print(model_to_loop)
         for model in model_to_loop:
-            models.append({f"{brand}-{model}": []})
             # I do this to get rid of the initial popup
             try:
                 driver.find_element(By.XPATH, "/html/body/div[5]/div[2]/div[1]/div[2]/div[2]/button[1]").click()
@@ -59,16 +62,13 @@ for brand in all_car_brands:
             driver.implicitly_wait(2)
             current_url = driver.current_url
             where_to_look_for = brand + "-" + model
-            models.append({where_to_look_for: current_url})
-            # for i in models:
-            #     for key, value in i.items():
-            #         if key == brand:
-            #             value.append({model: current_url})
-            driver.implicitly_wait(2)
+            models.append({"Maker": brand, "Model": model, "URL": current_url})
+            time.sleep(5)
             driver.execute_script("window.history.go(-1)")
             time.sleep(2)
-    df = pd.DataFrame.from_dict(models)
-    print(df)
-    df.to_csv(f"car_brands_and_models_links.csv")
+            df = pd.DataFrame.from_dict(models)
+            print(df)
+            df.to_excel(f"car_brands_and_models_links.xlsx")
+    time.sleep(5)
 
 print(models)

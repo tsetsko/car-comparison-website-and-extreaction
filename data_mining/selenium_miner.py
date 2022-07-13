@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 
 
-URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=oxonz5&f1"
+URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=oy5k9s&f1"
 EUR_TO_LEV = 1.95583
 TODAYS_DATE = datetime.today().strftime('%Y-%m-%d')
 month_to_number = {"януари": 1, "февруари": 2, "март": 3, "април": 4, "май": 5, "юни": 6, "юли": 7, "август": 8, "септември": 9, "октовмри": 10, "ноември": 11, "декември": 12}
@@ -100,6 +100,7 @@ def get_exact_data_for_each_car(html_link):
             for element1 in element.find_next_siblings('div'):
                 specific_element.append(element1.text.replace('•', '').strip())
         car_dict["Additional_Data"] = specific_element
+        car_dict["link_to_offer"] = html_link
     except:
         pass
 
@@ -113,6 +114,7 @@ for page in pages_with_car_offers:
     time.sleep(3)
 
 all_data_list = []
+len_all_data_list = len(all_data_list)
 counter = 0
 for detailed_page in all_cars:
     random_delay = round(random.uniform(3, 6), 2)
@@ -120,7 +122,7 @@ for detailed_page in all_cars:
     detailed_dict = get_exact_data_for_each_car(page_source_detail)
     all_data_list.append(detailed_dict)
     counter += 1
-    print(counter)
+    print(f"{counter}/{len_all_data_list}")
     time.sleep(random_delay)
 
 
