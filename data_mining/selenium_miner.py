@@ -2,13 +2,12 @@ import time
 from datetime import datetime
 import random
 from sys import platform
-
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
 
 
-URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=oy5k9s&f1"
+URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=padj4g&f1"
 EUR_TO_LEV = 1.95583
 TODAYS_DATE = datetime.today().strftime('%Y-%m-%d')
 month_to_number = {"януари": 1, "февруари": 2, "март": 3, "април": 4, "май": 5, "юни": 6, "юли": 7, "август": 8, "септември": 9, "октовмри": 10, "ноември": 11, "декември": 12}
@@ -114,7 +113,6 @@ for page in pages_with_car_offers:
     time.sleep(3)
 
 all_data_list = []
-len_all_data_list = len(all_data_list)
 counter = 0
 for detailed_page in all_cars:
     random_delay = round(random.uniform(3, 6), 2)
@@ -122,7 +120,7 @@ for detailed_page in all_cars:
     detailed_dict = get_exact_data_for_each_car(page_source_detail)
     all_data_list.append(detailed_dict)
     counter += 1
-    print(f"{counter}/{len_all_data_list}")
+    print(f"{counter}/{len(all_cars)}")
     time.sleep(random_delay)
 
 
