@@ -1,12 +1,14 @@
 import time
 from datetime import datetime
-import random
 from sys import platform
 import pandas as pd
 from bs4 import BeautifulSoup
 import requests
-import os
-import openpyxl
+
+
+class CarModels:
+    def __init__(self):
+        self.car_models_list = list(pd.read_excel('car_brands_and_models_links_VW.xlsx').itertuples(index=False, name=None))
 
 URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=padj4g&f1"
 TODAYS_DATE = datetime.today().strftime('%Y-%m-%d')
@@ -40,7 +42,7 @@ class PageHandler:
         last_page = all_pages.text.split(' ')[-1]
         list_of_urls = [self.url + f"={page}" for page in range(1, int(last_page) + 1)]
         return list_of_urls
-    
+
     def extract_car_links_per_page(self):
         intermediate_list = []
         for list_page in self.list_of_urls:
@@ -51,23 +53,27 @@ class PageHandler:
         return intermediate_list
 
 
-link = PageHandler(URL).extract_car_links_per_page()
-print(link)
+# link = PageHandler(URL).extract_car_links_per_page()
+# print(link)
 
 
 class CarPage:
-    def __init__(self, link_for_car):
+    def __init__(self, link_for_car, brand, model):
         self.EUR_TO_LEV = 1.95583
         self.TODAYS_DATE = datetime.today().strftime('%Y-%m-%d')
         self.month_to_number = {"януари": 1, "февруари": 2, "март": 3, "април": 4, "май": 5, "юни": 6, "юли": 7,
                                 "август": 8, "септември": 9, "октовмри": 10, "ноември": 11, "декември": 12}
         self.header = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'}
+        self.brand = brand
+        self.model = model
         self.link_for_car = link_for_car
         self.car_details = self.get_exact_data_for_each_car()
 
     def get_exact_data_for_each_car(self):
         car_dict = {}
         try:
+            car_dict['Brand'] = self.brand
+            car_dict['Model'] = self.model
             general_data = get_page_source(self.link_for_car, self.header).find('ul', {'class': 'dilarData'}).findChildren("li", recursive=False)
             general_data_only_text = [info.text for info in general_data]
             car_dict["Date_of_extraction"] = self.TODAYS_DATE
@@ -135,37 +141,27 @@ class CarPage:
         return car_dict
 
 
-# class OutputExcel:
-#     def __init__(self, data_row):
-#         self.TODAYS_DATE = datetime.today().strftime('%Y-%m-%d')
-#         self.data_row = data_row
-#         self.data_row_pd = pd.DataFrame.from_dict(self.data_row).reset_index(drop=True)
-#
-#     def create_new_excel(self):
-#         if os.path.isfile(f"data_{self.TODAYS_DATE}.xlsx"):
-#             print(os.path.isfile(f"data_{self.TODAYS_DATE}.xlsx"))
-#             with pd.ExcelWriter(f"data_{self.TODAYS_DATE}.xlsx", mode='a', engine='openpyxl', if_sheet_exists="overlay") as writer:
-#                 self.data_row_pd.to_excel(writer, sheet_name="Sheet1", startrow=writer.sheets['Sheet1'].max_row, header=False)
-#                 print(self.data_row_pd)
-#                 print("row added")
-#         else:
-#             with pd.ExcelWriter(f"data_{self.TODAYS_DATE}.xlsx") as writer:
-#                 self.data_row_pd.to_excel(writer, sheet_name="Sheet1")
-#                 print("sheet created")
-
-
-link = PageHandler(URL).extract_car_links_per_page()
+car_models = CarModels().car_models_list
 
 main_list = []
-for i in link:
-    car = CarPage(i)
-    time.sleep(1)
-    main_list.append(car.car_details)
+for car_model in car_models:
+    brand = car_model[1]
+    model = car_model[2]
+    model_url = car_model[3][:-2]
+    print(f"The model link is: {model_url}")
+    links = PageHandler(model_url).extract_car_links_per_page()
+    print('passed')
+    for link in links:
+        car = CarPage(link, brand, model)
+        time.sleep(1)
+        main_list.append(car.car_details)
+        print("extracted detailed data")
+
 
 df = pd.DataFrame.from_dict(main_list)
 df2 = df.dropna().reset_index(drop=True)
 
 print(df2)
 
-df2.to_excel(f"data_{TODAYS_DATE}.xlsx")
+df2.to_excel(f"data_{TODAYS_DATE}_VW.xlsx")
 
