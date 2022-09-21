@@ -8,7 +8,7 @@ import requests
 
 class CarModels:
     def __init__(self):
-        self.car_models_list = list(pd.read_excel('car_brands_and_models_links_VW.xlsx').itertuples(index=False, name=None))
+        self.car_models_list = list(pd.read_excel('car_brands_and_models_links_Audi.xlsx').itertuples(index=False, name=None))
 
 URL = "https://www.mobile.bg/pcgi/mobile.cgi?act=3&slink=padj4g&f1"
 TODAYS_DATE = datetime.today().strftime('%Y-%m-%d')
@@ -163,5 +163,5 @@ df2 = df.dropna().reset_index(drop=True)
 
 print(df2)
 
-df2.to_excel(f"data_{TODAYS_DATE}_VW.xlsx")
+df2.to_excel(f"data_{TODAYS_DATE}_Audi.xlsx")
 
