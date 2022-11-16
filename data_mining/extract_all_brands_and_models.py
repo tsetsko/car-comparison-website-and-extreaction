@@ -14,7 +14,7 @@ if platform == "darwin":
 elif platform == "win32":
     path = "C:\Windows\chromedriver.exe"
 # PATH = "/Applications/geckodriver"
-BRANDS_TO_LOOK_FOR = ["Audi"]
+BRANDS_TO_LOOK_FOR = ["BMW"]
 BRANDS_TO_LOOK_FOR1 = ["Audi", "BMW", "Mercedes-Benz", "Skoda", "VW"]
 AUDI_MODELS = ['A1', 'A2', 'A3', 'A4', 'A4 Allroad', 'A5', 'A6', 'A6 Allroad', 'A7', 'A8', 'E-Tron', 'Q2', 'Q3', 'Q4', 'Q5', 'Q7', 'Q8', 'Quattro', 'R8', 'RSQ8', 'Rs3', 'Rs4', 'Rs5', 'Rs6', 'Rs7', 'S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'SQ5', 'SQ7', 'SQ8', 'Tt']
 BMW_MODELS = ['1', '2', '3', '4', '5', '6', '7', 'M', 'M Coupе', 'M135', 'M140', 'M2', 'M3', 'M4', 'M5', 'M6', 'M8', 'X1', 'X2', 'X3', 'X4', 'X5', 'X5M', 'X6', 'X7', 'Z1', 'Z3', 'Z4', 'Z8', 'i3', 'i4', 'i8', 'iX', 'iX3']
@@ -37,7 +37,7 @@ for brand in all_car_brands:
         select.select_by_visible_text(brand)
         new_page_source = driver.page_source
         new_soup = BeautifulSoup(new_page_source, "html.parser")
-        model_to_loop = [model.text for model in new_soup.find("select", {"name": "model"}).findChildren("option", recursive=False) if model.text in AUDI_MODELS]
+        model_to_loop = [model.text for model in new_soup.find("select", {"name": "model"}).findChildren("option", recursive=False) if model.text in BMW_MODELS]
         # model_to_loop = [AUDI_MODELS]
         print(model_to_loop)
         for model in model_to_loop:
@@ -75,7 +75,7 @@ for brand in all_car_brands:
             time.sleep(2)
             df = pd.DataFrame.from_dict(models)
             print(df)
-            df.to_excel(f"car_brands_and_models_links_Audi.xlsx")
+            df.to_excel(f"car_brands_and_models_links_BMW.xlsx")
     time.sleep(2)
 
 print(models)
